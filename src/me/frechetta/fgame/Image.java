@@ -65,7 +65,8 @@ public class Image implements Disposable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println("Could not find file: " + path);
 		}
 		
 		width = image.getWidth();
@@ -199,6 +200,47 @@ public class Image implements Disposable
 	public int getHeight()
 	{
 		return height;
+	}
+	
+	public float getR()
+	{
+		return r;
+	}
+	
+	public float getG()
+	{
+		return g;
+	}
+	
+	public float getB()
+	{
+		return b;
+	}
+	
+	public float getA()
+	{
+		return a;
+	}
+	
+	
+	public void setColor(float r, float g, float b, float a)
+	{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = a;
+		
+		FloatBuffer colorBufferData = BufferUtils.createFloatBuffer(4 * 4);
+		colorBufferData.put(new float[]
+			{
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a
+			});
+		colorBufferData.rewind();
+		
+		colorBuffer = Utils.createBuffer(GL_ARRAY_BUFFER, colorBufferData);
 	}
 	
 	

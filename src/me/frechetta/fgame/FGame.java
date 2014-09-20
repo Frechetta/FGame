@@ -1,5 +1,9 @@
 package me.frechetta.fgame;
 
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glViewport;
 import me.frechetta.lwjglutil.Input;
 import me.frechetta.lwjglutil.ShaderProgram;
@@ -19,6 +23,12 @@ public abstract class FGame
 	private boolean running = true;
 	
 	private ShaderProgram program;
+	
+	public static int modelUnif;
+	
+	public static int positionAtt;
+	public static int colorAtt;
+	public static int texcoordAtt;
 	
 	
 	public FGame(String name, int width, int height, boolean fullscreen)
@@ -62,12 +72,16 @@ public abstract class FGame
 			
 			program = new ShaderProgram(readFromFile("shader.vert"), readFromFile("shader.frag"));
 			
-			init();
+			modelUnif = program.getUniformLocation("vertModel");
 			
+			positionAtt = program.getAttribLocation("vertPosition");
+			colorAtt = program.getAttribLocation("vertColor");
+			texcoordAtt = program.getAttribLocation("vertTexcoord");
+			
+			init();
 			Utils.checkGLError("init");
 			
 			resized();
-			
 			Utils.checkGLError("resized");
 			
 			long lastTime, lastFPS;
@@ -86,7 +100,11 @@ public abstract class FGame
 				
 				Utils.checkGLError("update");
 				
+				glClear(GL_COLOR_BUFFER_BIT);
+				
+				program.begin();
 				render();
+				program.end();
 				
 				Utils.checkGLError("render");
 				
@@ -109,6 +127,7 @@ public abstract class FGame
 		}
 		finally
 		{
+			program.dispose();
 			dispose();
 			destroy();
 		}
@@ -116,7 +135,7 @@ public abstract class FGame
 	
 	private void initGL()
 	{
-		
+		glEnable(GL_TEXTURE_2D);
 	}
 	
 	
@@ -147,12 +166,12 @@ public abstract class FGame
 	}
 	
 	
-	public int getWidth()
+	public static int getWidth()
 	{
 		return Display.getWidth();
 	}
 	
-	public int getHeight()
+	public static int getHeight()
 	{
 		return Display.getHeight();
 	}

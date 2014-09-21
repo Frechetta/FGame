@@ -49,7 +49,10 @@ public class Image implements Disposable
 	private int texcoordBuffer;
 	private int elementBuffer;
 	
-	private Matrix4 model;
+	private Matrix4 translation;
+	private Matrix4 rotation;
+	
+	private float angle;
 	
 	private int lastWindowWidth;
 	private int lastWindowHeight;
@@ -79,10 +82,15 @@ public class Image implements Disposable
 		
 		texture = Utils.loadTexture(image);
 		
-		float x0 = -1.0f;
+		/*float x0 = -1.0f;
 		float y0 = 1.0f;
 		float x1 = (float)width / FGame.getWidth() * 2.0f - 1;
-		float y1 = -(float)height / FGame.getHeight() * 2.0f + 1;
+		float y1 = -(float)height / FGame.getHeight() * 2.0f + 1;*/
+		
+		float x0 = 0.0f;
+		float y0 = 0.0f;
+		float x1 = x0 + width;
+		float y1 = y0 + height;
 		
 		FloatBuffer vertexBufferData = BufferUtils.createFloatBuffer(2 * 4);
 		vertexBufferData.put(new float[]
@@ -127,7 +135,10 @@ public class Image implements Disposable
 		texcoordBuffer = Utils.createBuffer(GL_ARRAY_BUFFER, texcoordBufferData);
 		elementBuffer = Utils.createBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferData);
 		
-		model = new Matrix4().clearToIdentity();
+		translation = new Matrix4().clearToIdentity();
+		rotation = new Matrix4().clearToIdentity();
+		
+		angle = 0.0f;
 		
 		lastWindowWidth = FGame.getWidth();
 		lastWindowHeight = FGame.getHeight();
@@ -141,10 +152,10 @@ public class Image implements Disposable
 		
 		if (lastWindowWidth != windowWidth || lastWindowHeight != windowHeight)
 		{
-			float x0 = -1.0f;
-			float y0 = 1.0f;
-			float x1 = (float)width / windowWidth * 2.0f - 1;
-			float y1 = -(float)height / windowHeight * 2.0f + 1;
+			float x0 = 0.0f;
+			float y0 = 0.0f;
+			float x1 = x0 + width;
+			float y1 = y0 + height;
 			
 			FloatBuffer vertexBufferData = BufferUtils.createFloatBuffer(2 * 4);
 			vertexBufferData.put(new float[]
@@ -162,9 +173,9 @@ public class Image implements Disposable
 			lastWindowHeight = windowHeight;
 		}
 		
-		float px = (float)x / FGame.getWidth() * 2.0f;
-		float py = -(float)y / FGame.getHeight() * 2.0f;
-		glUniformMatrix4(FGame.modelUnif, false, model.clearToIdentity().translate(px, py, 0).toBuffer());
+		glUniformMatrix4(FGame.translationUnif, false, translation.clearToIdentity().translate(x, y, 0).toBuffer());
+		
+		glUniformMatrix4(FGame.rotationUnif, false, rotation.toBuffer());
 		
 		glActiveTexture(GL13.GL_TEXTURE0);
 		glBindTexture(GL11.GL_TEXTURE_2D, texture);
@@ -189,6 +200,22 @@ public class Image implements Disposable
 		glDisableVertexAttribArray(FGame.texcoordAtt);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+	
+	
+	public void rotate(float amount)
+	{
+		angle -= amount;
+		angle = angle % 360;
+		
+		rotation = rotation.rotateDeg(-amount, 0, 0, 1);
+	}
+	
+	public void setRotation(float angle)
+	{
+		this.angle = -angle % 360;
+		
+		rotation = rotation.clearToIdentity().rotateDeg(this.angle, 0, 0, 1);
 	}
 	
 	

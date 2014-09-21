@@ -5,9 +5,11 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4;
 import me.frechetta.lwjglutil.Input;
 import me.frechetta.lwjglutil.ShaderProgram;
 import me.frechetta.lwjglutil.Utils;
+import me.frechetta.lwjglutil.math.Matrix4;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.ContextAttribs;
@@ -24,11 +26,16 @@ public abstract class FGame
 	
 	private ShaderProgram program;
 	
-	public static int modelUnif;
+	public static int translationUnif;
+	public static int rotationUnif;
+	
+	private static int projectionUnif;
 	
 	public static int positionAtt;
 	public static int colorAtt;
 	public static int texcoordAtt;
+	
+	private Matrix4 projection;
 	
 	
 	public FGame(String name, int width, int height, boolean fullscreen)
@@ -68,15 +75,23 @@ public abstract class FGame
 	{
 		try
 		{
-			initGL();
-			
 			program = new ShaderProgram(readFromFile("shader.vert"), readFromFile("shader.frag"));
 			
-			modelUnif = program.getUniformLocation("vertModel");
+			translationUnif = program.getUniformLocation("vertTranslation");
+			rotationUnif = program.getUniformLocation("vertRotation");
+			projectionUnif = program.getUniformLocation("vertProjection");
 			
 			positionAtt = program.getAttribLocation("vertPosition");
 			colorAtt = program.getAttribLocation("vertColor");
 			texcoordAtt = program.getAttribLocation("vertTexcoord");
+			
+			projection = new Matrix4().clearToOrtho(0.0f, getWidth(), getHeight(), 0.0f, 0, 1);
+			
+			program.begin();
+			glUniformMatrix4(projectionUnif, false, projection.toBuffer());
+			program.end();
+			
+			initGL();
 			
 			init();
 			Utils.checkGLError("init");
@@ -151,6 +166,12 @@ public abstract class FGame
 	public void resized()
 	{
 		glViewport(0, 0, getWidth(), getHeight());
+		
+		projection.clearToOrtho(0.0f, getWidth(), getHeight(), 0.0f, 0, 1);
+		
+		program.begin();
+		glUniformMatrix4(projectionUnif, false, projection.toBuffer());
+		program.end();
 	}
 	
 	

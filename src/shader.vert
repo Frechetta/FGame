@@ -1,6 +1,9 @@
 #version 330
 
-uniform mat4 vertModel;
+uniform mat4 vertTranslation;
+uniform mat4 vertRotation;
+
+uniform mat4 vertProjection;
 
 in vec2 vertPosition;
 in vec4 vertColor;
@@ -11,7 +14,9 @@ out vec2 fragTexcoord;
 
 void main()
 {
-	gl_Position = vertModel * vec4(vertPosition, 0.0, 1.0);
+	mat4 model = vertTranslation * vertRotation;
+
+	gl_Position = vertProjection * model * vec4(vertPosition, 0.0, 1.0);
 	fragColor = vertColor;
 	fragTexcoord = vertTexcoord;
 }

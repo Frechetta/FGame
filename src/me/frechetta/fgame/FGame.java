@@ -28,6 +28,7 @@ public abstract class FGame
 	
 	public static int translationUnif;
 	public static int rotationUnif;
+	public static int scaleUnif;
 	
 	private static int projectionUnif;
 	
@@ -79,6 +80,8 @@ public abstract class FGame
 			
 			translationUnif = program.getUniformLocation("vertTranslation");
 			rotationUnif = program.getUniformLocation("vertRotation");
+			scaleUnif = program.getUniformLocation("vertScale");
+			
 			projectionUnif = program.getUniformLocation("vertProjection");
 			
 			positionAtt = program.getAttribLocation("vertPosition");

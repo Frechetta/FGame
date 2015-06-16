@@ -53,9 +53,29 @@ public class Image implements Disposable
 	private Matrix4 rotationMatrix;
 	private Matrix4 scaleMatrix;
 	
+	private Matrix4 modelMatrix;
+	
 	private float rotation;
 	private float scale;
 	
+	private float centerOfRotationX;
+	private float centerOfRotationY;
+	
+	private int lastX;
+	private int lastY;
+	private float lastRotation;
+	private float lastScale;
+	
+	
+	public Image()
+	{
+		init(0, 0);
+	}
+	
+	public Image(int width, int height)
+	{
+		init(width, height);
+	}
 	
 	public Image(String path)
 	{
@@ -71,15 +91,21 @@ public class Image implements Disposable
 			System.err.println("Could not find file: " + path);
 		}
 		
-		width = image.getWidth();
-		height = image.getHeight();
+		texture = Utils.loadTexture(image);
+		
+		init(image.getWidth(), image.getHeight());
+	}
+	
+	
+	private void init(int width, int height)
+	{
+		this.width = width;
+		this.height = height;
 		
 		r = 1.0f;
 		g = 1.0f;
 		b = 1.0f;
 		a = 1.0f;
-		
-		texture = Utils.loadTexture(image);
 		
 		float x0 = 0.0f;
 		float y0 = 0.0f;
@@ -134,15 +160,33 @@ public class Image implements Disposable
 		scaleMatrix = new Matrix4().clearToIdentity();
 		
 		rotation = 0.0f;
-		scale = 0.0f;
+		scale = 1.0f;
+		
+		centerOfRotationX = 0.0f;
+		centerOfRotationY = 0.0f;
 	}
 	
 	
 	public void draw(int x, int y)
 	{
-		glUniformMatrix4(FGame.translationUnif, false, translationMatrix.clearToIdentity().translate(x, y, 0).toBuffer());
-		glUniformMatrix4(FGame.rotationUnif, false, rotationMatrix.toBuffer());
-		glUniformMatrix4(FGame.scaleUnif, false, scaleMatrix.toBuffer());
+		if (rotation != lastRotation)
+		{
+			rotationMatrix.clearToIdentity().translate(centerOfRotationX, centerOfRotationY, 0).rotateDeg(rotation, 0, 0, 1).translate(-centerOfRotationX, -centerOfRotationY, 0);
+		}
+		
+		if (scale != lastScale)
+		{
+			scaleMatrix.clearToIdentity().scale(scale);
+			
+			System.out.println(scale);
+		}
+		
+		if (x != lastX || y != lastY || rotation != lastRotation || scale != lastScale)
+		{
+			calcModel(x, y);
+		}
+		
+		glUniformMatrix4(FGame.modelUnif, false, modelMatrix.toBuffer());
 		
 		glActiveTexture(GL13.GL_TEXTURE0);
 		glBindTexture(GL11.GL_TEXTURE_2D, texture);
@@ -170,26 +214,44 @@ public class Image implements Disposable
 	}
 	
 	
-	public void rotate(float amount)
+	public void rotate(float degrees)
 	{
-		rotation -= amount;
-		rotation = rotation % 360;
-		
-		rotationMatrix.rotateDeg(-amount, 0, 0, 1);
+		rotation -= degrees;
+		rotation %= 360;
 	}
 	
-	public void setRotation(float rotation)
+	public void setRotation(float degrees)
 	{
-		this.rotation = -rotation % 360;
-		
-		rotationMatrix.clearToIdentity().rotateDeg(this.rotation, 0, 0, 1);
+		rotation = -degrees % 360;
 	}
 	
 	
 	public void scale(float amount)
 	{
+		scale *= amount;
+	}
+	
+	public void setScale(float amount)
+	{
 		scale = amount;
-		scaleMatrix.scale(scale);
+	}
+	
+	
+	public void setCenterOfRotation(float x, float y)
+	{
+		centerOfRotationX = x;
+		centerOfRotationY = y;
+	}
+	
+	
+	private void calcModel(int x, int y)
+	{
+		modelMatrix = translationMatrix.clearToIdentity().translate(x, y, 0).mult(rotationMatrix.mult(scaleMatrix.clearToIdentity().scale(scale)));
+		
+		lastX = x;
+		lastY = y;
+		lastRotation = rotation;
+		lastScale = scale;
 	}
 	
 	
@@ -231,6 +293,16 @@ public class Image implements Disposable
 	public float getScale()
 	{
 		return scale;
+	}
+	
+	public float getCenterOfRotationX()
+	{
+		return centerOfRotationX;
+	}
+	
+	public float getCenterOfRotationY()
+	{
+		return centerOfRotationY;
 	}
 	
 	

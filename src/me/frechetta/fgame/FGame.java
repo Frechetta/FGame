@@ -26,9 +26,7 @@ public abstract class FGame
 	
 	private ShaderProgram program;
 	
-	public static int translationUnif;
-	public static int rotationUnif;
-	public static int scaleUnif;
+	public static int modelUnif;
 	
 	private static int projectionUnif;
 	
@@ -78,9 +76,7 @@ public abstract class FGame
 		{
 			program = new ShaderProgram(readFromFile("shader.vert"), readFromFile("shader.frag"));
 			
-			translationUnif = program.getUniformLocation("vertTranslation");
-			rotationUnif = program.getUniformLocation("vertRotation");
-			scaleUnif = program.getUniformLocation("vertScale");
+			modelUnif = program.getUniformLocation("vertModel");
 			
 			projectionUnif = program.getUniformLocation("vertProjection");
 			
@@ -131,12 +127,12 @@ public abstract class FGame
 				fps++;
 				if(System.nanoTime() - lastFPS >= 1e9)
 				{
-					//System.out.println("FPS: ".concat(String.valueOf(fps)));
+					System.out.println("FPS: " + fps);
 					lastFPS += 1e9;
 					fps = 0;
 				}
 				
-				Display.sync(targetFPS);
+				//Display.sync(targetFPS);
 			}
 		}
 		catch(Throwable exc)
@@ -209,6 +205,12 @@ public abstract class FGame
 	{
 		return fps;
 	}
+	
+	public boolean isResizable()
+	{
+		return Display.isResizable();
+	}
+	
 	
 	public void setTargetFPS(int targetFPS)
 	{
